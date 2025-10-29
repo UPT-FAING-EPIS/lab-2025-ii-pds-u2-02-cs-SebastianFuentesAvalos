@@ -4,7 +4,7 @@
 
 ---
 
-### Nombre: Sebastian Nicolas Fuentes Avalos
+### Nombre: Sebastián Nicolas Fuentes Avalos
 
 ---
 
