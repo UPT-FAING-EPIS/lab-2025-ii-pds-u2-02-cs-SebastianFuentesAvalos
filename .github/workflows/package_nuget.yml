@@ -1,0 +1,135 @@
+name: Build & Publish NuGet Package
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Restore dependencies Notifications
+      run: dotnet restore Notifications/Notifications.sln
+      
+    - name: Restore dependencies CustomerApp
+      run: dotnet restore CustomerApp/CustomerApp.sln
+      
+    - name: Build Notifications
+      run: dotnet build Notifications/Notifications.sln --no-restore --configuration Release
+      
+    - name: Build CustomerApp
+      run: dotnet build CustomerApp/CustomerApp.sln --no-restore --configuration Release
+      
+    - name: Run tests
+      run: |
+        dotnet test Notifications/Notifications.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
+        dotnet test CustomerApp/CustomerApp.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
+      
+    - name: Install ReportGenerator
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        export PATH="$PATH:/home/runner/.dotnet/tools"
+      
+    - name: Generate coverage report
+      run: |
+        mkdir -p Cobertura
+        export PATH="$PATH:/home/runner/.dotnet/tools"
+        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:Cobertura" -reporttypes:MarkdownSummaryGithub
+        
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: Cobertura/
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Create sonar-project.properties
+      run: |
+        cat > sonar-project.properties << 'EOF'
+        sonar.projectKey=UPT-FAING-EPIS_lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos
+        sonar.organization=upt-faing-epis
+        sonar.sources=Notifications/Notifications.Domain,CustomerApp/CustomerApp.Domain
+        sonar.tests=Notifications/Notifications.Domain.Tests,CustomerApp/CustomerApp.Domain.Tests
+        sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
+        sonar.exclusions=**/bin/**,**/obj/**
+        EOF
+        
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  package:
+    runs-on: ubuntu-latest
+    needs: [test, sonarcloud]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore Notifications Domain
+      run: dotnet restore Notifications/Notifications.Domain/Notifications.Domain.csproj
+
+    - name: Restore CustomerApp Domain
+      run: dotnet restore CustomerApp/CustomerApp.Domain/CustomerApp.Domain.csproj
+
+    - name: Build Notifications Domain
+      run: dotnet build Notifications/Notifications.Domain/Notifications.Domain.csproj --configuration Release --no-restore
+
+    - name: Build CustomerApp Domain
+      run: dotnet build CustomerApp/CustomerApp.Domain/CustomerApp.Domain.csproj --configuration Release --no-restore
+
+    - name: Pack Notifications Domain
+      run: dotnet pack Notifications/Notifications.Domain/Notifications.Domain.csproj --configuration Release --no-build --output ./nupkg
+
+    - name: Pack CustomerApp Domain
+      run: dotnet pack CustomerApp/CustomerApp.Domain/CustomerApp.Domain.csproj --configuration Release --no-build --output ./nupkg
+
+    - name: Authenticate to GitHub Packages
+      run: |
+        dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+
+    - name: Publish to GitHub Packages
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        for package in ./nupkg/*.nupkg
+        do
+          dotnet nuget push "$package" \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
+        done

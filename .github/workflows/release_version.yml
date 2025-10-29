@@ -1,0 +1,126 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Solo se ejecuta cuando se crean tags que comienzan con 'v'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      # Clonar el repositorio
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Configurar .NET
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Obtener información de la versión del tag
+      - name: Get version info
+        id: get_version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "RELEASE_NAME=Patrones de Diseño v$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      # Ejecutar tests antes del release
+      - name: Run tests
+        run: |
+          dotnet restore Notifications/Notifications.sln
+          dotnet restore CustomerApp/CustomerApp.sln
+          dotnet test Notifications/Notifications.sln --configuration Release
+          dotnet test CustomerApp/CustomerApp.sln --configuration Release
+
+      # Restaurar y compilar ambos proyectos
+      - name: Build Notifications Domain
+        run: |
+          dotnet restore Notifications/Notifications.Domain/Notifications.Domain.csproj
+          dotnet build Notifications/Notifications.Domain/Notifications.Domain.csproj --configuration Release /p:Version=${{ steps.get_version.outputs.VERSION }}
+
+      - name: Build CustomerApp Domain
+        run: |
+          dotnet restore CustomerApp/CustomerApp.Domain/CustomerApp.Domain.csproj
+          dotnet build CustomerApp/CustomerApp.Domain/CustomerApp.Domain.csproj --configuration Release /p:Version=${{ steps.get_version.outputs.VERSION }}
+
+      # Crear paquetes NuGet
+      - name: Create NuGet packages
+        run: |
+          dotnet pack Notifications/Notifications.Domain/Notifications.Domain.csproj --configuration Release --output ./artifacts /p:Version=${{ steps.get_version.outputs.VERSION }}
+          dotnet pack CustomerApp/CustomerApp.Domain/CustomerApp.Domain.csproj --configuration Release --output ./artifacts /p:Version=${{ steps.get_version.outputs.VERSION }}
+
+      # Generar changelog automático
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Obtener el tag anterior o todos los commits si es el primer tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            CHANGES=$(git log --oneline --pretty=format:"- %s (%h)" HEAD)
+            echo "BODY=## 🚀 Initial Release v${{ steps.get_version.outputs.VERSION }}\n\n### 📝 Commits:\n$CHANGES" >> $GITHUB_OUTPUT
+          else
+            CHANGES=$(git log --oneline --pretty=format:"- %s (%h)" $PREV_TAG..HEAD)
+            echo "BODY=## 📦 Release v${{ steps.get_version.outputs.VERSION }}\n\n### 📋 Changes since $PREV_TAG:\n$CHANGES" >> $GITHUB_OUTPUT
+          fi
+
+      # Crear release en GitHub
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
+          name: ${{ steps.get_version.outputs.RELEASE_NAME }}
+          body: |
+            ${{ steps.changelog.outputs.BODY }}
+            
+            ### 📦 Package Details
+            - **Version**: ${{ steps.get_version.outputs.VERSION }}
+            - **Framework**: .NET 8.0
+            - **Packages**: Notifications.Domain, CustomerApp.Domain
+            - **Authors**: Sebastian Nicolas Fuentes Avalos
+            
+            ### 🔧 Installation
+            ```xml
+            <PackageReference Include="Notifications.Domain" Version="${{ steps.get_version.outputs.VERSION }}" />
+            <PackageReference Include="CustomerApp.Domain" Version="${{ steps.get_version.outputs.VERSION }}" />
+            ```
+            
+            ### 📊 NuGet Feed
+            Add this to your `nuget.config`:
+            ```xml
+            <packageSources>
+                <add key="github" value="https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" />
+            </packageSources>
+            ```
+            
+            ### 🏗️ Architecture Patterns Implemented
+            - **Strategy Pattern**: Notification system with different message senders
+            - **Single Responsibility Principle**: Clear separation of concerns
+            - **Open/Closed Principle**: Extensible design without modification
+          files: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, '-') }}
+
+      # Publicar los paquetes en GitHub Packages también
+      - name: Publish to GitHub Packages
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+          for package in ./artifacts/*.nupkg
+          do
+            dotnet nuget push "$package" \
+              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+              --api-key ${{ secrets.GITHUB_TOKEN }} \
+              --skip-duplicate
+          done

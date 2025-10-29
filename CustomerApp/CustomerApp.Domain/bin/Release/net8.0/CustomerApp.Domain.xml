@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CustomerApp.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:CustomerApp.Domain.Customer">
+            <summary>
+            Representa un cliente en el sistema con información personal y de contacto.
+            Implementa el patrón de construcción estática para crear instancias válidas.
+            </summary>
+        </member>
+        <member name="P:CustomerApp.Domain.Customer.Name">
+            <summary>
+            Obtiene o establece el nombre del cliente.
+            </summary>
+        </member>
+        <member name="P:CustomerApp.Domain.Customer.Email">
+            <summary>
+            Obtiene o establece la dirección de correo electrónico del cliente.
+            </summary>
+        </member>
+        <member name="P:CustomerApp.Domain.Customer.MobileNumber">
+            <summary>
+            Obtiene o establece el número de teléfono móvil del cliente.
+            </summary>
+        </member>
+        <member name="P:CustomerApp.Domain.Customer.Address">
+            <summary>
+            Obtiene o establece la dirección física del cliente.
+            </summary>
+        </member>
+        <member name="P:CustomerApp.Domain.Customer.Password">
+            <summary>
+            Obtiene o establece la contraseña del cliente.
+            </summary>
+        </member>
+        <member name="M:CustomerApp.Domain.Customer.Create(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Crea una nueva instancia de Customer con los datos proporcionados.
+            </summary>
+            <param name="name">Nombre del cliente.</param>
+            <param name="email">Correo electrónico del cliente.</param>
+            <param name="mobileNumber">Número de teléfono móvil.</param>
+            <param name="address">Dirección física del cliente.</param>
+            <param name="password">Contraseña del cliente.</param>
+            <returns>Una nueva instancia de Customer con los datos especificados.</returns>
+        </member>
+        <member name="T:CustomerApp.Domain.Validator">
+            <summary>
+            Clase responsable de validar objetos Customer según las reglas de negocio.
+            Implementa el Principio de Responsabilidad Única (SRP) al encapsular toda la lógica de validación.
+            </summary>
+        </member>
+        <member name="M:CustomerApp.Domain.Validator.ValidateCustomer(CustomerApp.Domain.Customer)">
+            <summary>
+            Valida que un objeto Customer cumpla con todas las reglas de negocio requeridas.
+            </summary>
+            <param name="customer">El objeto Customer a validar.</param>
+            <returns>True si la validación es exitosa.</returns>
+            <exception cref="T:System.ArgumentException">Se lanza cuando algún campo requerido está vacío o es nulo.</exception>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,225 @@
+name: Publish Documentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-publish-docs:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Restore dependencies Notifications
+      run: dotnet restore Notifications/Notifications.sln
+      
+    - name: Restore dependencies CustomerApp
+      run: dotnet restore CustomerApp/CustomerApp.sln
+      
+    - name: Build Notifications
+      run: dotnet build Notifications/Notifications.sln --no-restore --configuration Release
+      
+    - name: Build CustomerApp
+      run: dotnet build CustomerApp/CustomerApp.sln --no-restore --configuration Release
+      
+    - name: Install tools
+      run: |
+        dotnet tool install -g docfx
+        dotnet tool install -g dll2mmd
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        export PATH="$PATH:/home/runner/.dotnet/tools"
+      
+    - name: Setup .NET 6 runtime (for tools that target net6)
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6.0.x'
+      
+    - name: Run tests with coverage
+      run: |
+        dotnet test Notifications/Notifications.sln --configuration Release --collect:"XPlat Code Coverage"
+        dotnet test CustomerApp/CustomerApp.sln --configuration Release --collect:"XPlat Code Coverage"
+      
+    - name: Generate coverage report
+      run: |
+        mkdir -p Cobertura
+        export PATH="$PATH:/home/runner/.dotnet/tools"
+        reportgenerator "-reports:**/coverage.cobertura.xml" "-targetdir:Cobertura" -reporttypes:MarkdownSummaryGithub
+        
+    - name: Generate class diagrams
+      run: |
+        export PATH="$PATH:/home/runner/.dotnet/tools"
+        export DOTNET_ROLL_FORWARD=Major
+        
+        cd Notifications
+        dll2mmd -f Notifications.Domain/bin/Release/net8.0/Notifications.Domain.dll -o disenio-notifications.md
+        cd ..
+        
+        cd CustomerApp
+        dll2mmd -f CustomerApp.Domain/bin/Release/net8.0/CustomerApp.Domain.dll -o disenio-customer.md
+        cd ..
+        
+        cp Notifications/disenio-notifications.md ./disenio-notifications.md
+        cp CustomerApp/disenio-customer.md ./disenio-customer.md
+
+    - name: Prepend mermaid include to diagrams
+      run: |
+        echo '!INCLUDE mermaid.md' | cat - disenio-notifications.md > temp && mv temp disenio-notifications.md
+        echo '!INCLUDE mermaid.md' | cat - disenio-customer.md > temp && mv temp disenio-customer.md
+        
+    - name: Create docfx.json
+      run: |
+        cat > docfx.json << 'EOF'
+        {
+          "metadata": [
+            {
+              "src": [
+                {
+                  "files": [
+                    "Notifications/Notifications.Domain/*.csproj"
+                  ]
+                }
+              ],
+              "dest": "api-notifications",
+              "properties": {
+                "TargetFramework": "net8.0"
+              }
+            },
+            {
+              "src": [
+                {
+                  "files": [
+                    "CustomerApp/CustomerApp.Domain/*.csproj"
+                  ]
+                }
+              ],
+              "dest": "api-customer",
+              "properties": {
+                "TargetFramework": "net8.0"
+              }
+            }
+          ],
+          "build": {
+            "content": [
+              {
+                "files": [
+                  "api-notifications/*.yml",
+                  "api-customer/*.yml"
+                ]
+              },
+              {
+                "files": [
+                  "*.md",
+                  "toc.yml"
+                ]
+              }
+            ],
+            "resource": [
+              {
+                "files": [
+                  "images/**"
+                ]
+              }
+            ],
+            "dest": "_site",
+            "globalMetadataFiles": [],
+            "fileMetadataFiles": [],
+            "template": [
+              "default"
+            ],
+            "postProcessors": [],
+            "keepFileLink": false,
+            "disableGitFeatures": false
+          }
+        }
+        EOF
+        
+    - name: Create index.md
+      run: |
+        cat > index.md << 'EOF'
+        ---
+        _layout: landing
+        ---
+        
+        # Patrones de Diseño - Documentación
+        
+        ## 📊 Diagramas de Clases
+        
+        ### [Notifications Domain](disenio-notifications.md)
+        Diagrama de clases del proyecto de notificaciones que implementa el patrón Strategy.
+        
+        ### [CustomerApp Domain](disenio-customer.md)
+        Diagrama de clases del proyecto de gestión de clientes.
+        
+        ## 🧪 [Cobertura de Pruebas](Cobertura/SummaryGithub.md)
+        
+        ## 📚 API Documentation
+        
+        ### [Notifications.Domain API](~/api-notifications/index.md)
+        ### [CustomerApp.Domain API](~/api-customer/index.md)
+        
+        ## 🏗️ Arquitectura
+        
+        Este proyecto implementa varios patrones de diseño:
+        - **Strategy Pattern**: En el sistema de notificaciones
+        - **Single Responsibility Principle**: Separación de responsabilidades en clases
+        - **Open/Closed Principle**: Extensibilidad sin modificación
+        EOF
+        
+    - name: Create toc.yml
+      run: |
+        cat > toc.yml << 'EOF'
+        - name: Home
+          href: index.md
+        - name: Notifications Diagram
+          href: disenio-notifications.md
+        - name: Customer Diagram
+          href: disenio-customer.md
+        - name: Coverage Report
+          href: Cobertura/SummaryGithub.md
+        - name: API Documentation
+          items:
+          - name: Notifications.Domain
+            href: ~/api-notifications/
+          - name: CustomerApp.Domain
+            href: ~/api-customer/
+        EOF
+        
+    - name: Create mermaid.md
+      run: |
+        cat > mermaid.md << 'EOF'
+        <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+        </script>
+        EOF
+        
+    - name: Build documentation
+      run: |
+        export PATH="$PATH:/home/runner/.dotnet/tools"
+        docfx metadata docfx.json || echo "Metadata generation completed"
+        docfx build docfx.json
+        
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: _site
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

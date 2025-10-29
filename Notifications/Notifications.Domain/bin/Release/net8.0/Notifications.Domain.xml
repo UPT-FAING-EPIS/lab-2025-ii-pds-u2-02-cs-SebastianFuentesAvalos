@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Notifications.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Notifications.Domain.AbstractMessage">
+            <summary>
+            Clase base abstracta para implementar el patrón Strategy en el sistema de mensajería.
+            Define la estructura común para diferentes tipos de mensajes.
+            </summary>
+        </member>
+        <member name="F:Notifications.Domain.AbstractMessage._messageSender">
+            <summary>
+            Instancia del enviador de mensajes que implementa la estrategia específica de envío.
+            </summary>
+        </member>
+        <member name="M:Notifications.Domain.AbstractMessage.SendMessage(System.String)">
+            <summary>
+            Envía un mensaje utilizando la estrategia de envío configurada.
+            </summary>
+            <param name="Message">El contenido del mensaje a enviar.</param>
+            <returns>Una cadena de confirmación del envío del mensaje.</returns>
+        </member>
+        <member name="T:Notifications.Domain.EmailMessageSender">
+            <summary>
+            Estrategia concreta para el envío de mensajes por correo electrónico.
+            Implementa la interfaz IMessageSender para proporcionar funcionalidad específica de email.
+            </summary>
+        </member>
+        <member name="M:Notifications.Domain.EmailMessageSender.SendMessage(System.String)">
+            <summary>
+            Envía un mensaje utilizando el servicio de correo electrónico.
+            </summary>
+            <param name="Message">El contenido del mensaje a enviar por email.</param>
+            <returns>Una cadena de confirmación que indica que el mensaje fue enviado por email.</returns>
+        </member>
+        <member name="T:Notifications.Domain.IMessageSender">
+            <summary>
+            Interfaz que define el contrato para los diferentes métodos de envío de mensajes.
+            Implementa el patrón Strategy permitiendo intercambiar algoritmos de envío.
+            </summary>
+        </member>
+        <member name="M:Notifications.Domain.IMessageSender.SendMessage(System.String)">
+            <summary>
+            Envía un mensaje utilizando el método específico implementado por la clase concreta.
+            </summary>
+            <param name="Message">El contenido del mensaje a enviar.</param>
+            <returns>Una cadena de confirmación que indica el resultado del envío.</returns>
+        </member>
+        <member name="T:Notifications.Domain.LongMessage">
+            <summary>
+            Implementación concreta para mensajes largos que pueden enviarse por cualquier medio.
+            Esta clase no impone restricciones de longitud en el contenido del mensaje.
+            </summary>
+        </member>
+        <member name="M:Notifications.Domain.LongMessage.#ctor(Notifications.Domain.IMessageSender)">
+            <summary>
+            Inicializa una nueva instancia de la clase LongMessage con el enviador especificado.
+            </summary>
+            <param name="messageSender">La estrategia de envío a utilizar para mensajes largos.</param>
+        </member>
+        <member name="M:Notifications.Domain.LongMessage.SendMessage(System.String)">
+            <summary>
+            Envía un mensaje largo utilizando la estrategia de envío configurada.
+            </summary>
+            <param name="Message">El contenido del mensaje a enviar (sin restricciones de longitud).</param>
+            <returns>Una cadena de confirmación del envío del mensaje.</returns>
+        </member>
+        <member name="T:Notifications.Domain.ShortMessage">
+            <summary>
+            Implementación concreta para mensajes cortos con restricción de longitud máxima.
+            Valida que el mensaje no exceda los 25 caracteres antes del envío.
+            </summary>
+        </member>
+        <member name="F:Notifications.Domain.ShortMessage.LARGE_ERROR_MESSAGE">
+            <summary>
+            Mensaje de error que se lanza cuando el mensaje excede la longitud permitida.
+            </summary>
+        </member>
+        <member name="M:Notifications.Domain.ShortMessage.#ctor(Notifications.Domain.IMessageSender)">
+            <summary>
+            Inicializa una nueva instancia de la clase ShortMessage con el enviador especificado.
+            </summary>
+            <param name="messageSender">La estrategia de envío a utilizar para mensajes cortos.</param>
+        </member>
+        <member name="M:Notifications.Domain.ShortMessage.SendMessage(System.String)">
+            <summary>
+            Envía un mensaje corto validando primero su longitud.
+            </summary>
+            <param name="Message">El contenido del mensaje a enviar (máximo 25 caracteres).</param>
+            <returns>Una cadena de confirmación del envío del mensaje.</returns>
+            <exception cref="T:System.ArgumentException">Se lanza cuando el mensaje excede los 25 caracteres.</exception>
+        </member>
+        <member name="T:Notifications.Domain.SmsMessageSender">
+            <summary>
+            Estrategia concreta para el envío de mensajes por SMS.
+            Implementa la interfaz IMessageSender para proporcionar funcionalidad específica de mensajería de texto.
+            </summary>
+        </member>
+        <member name="M:Notifications.Domain.SmsMessageSender.SendMessage(System.String)">
+            <summary>
+            Envía un mensaje utilizando el servicio de SMS.
+            </summary>
+            <param name="Message">El contenido del mensaje a enviar por SMS.</param>
+            <returns>Una cadena de confirmación que indica que el mensaje fue enviado por SMS.</returns>
+        </member>
+    </members>
+</doc>

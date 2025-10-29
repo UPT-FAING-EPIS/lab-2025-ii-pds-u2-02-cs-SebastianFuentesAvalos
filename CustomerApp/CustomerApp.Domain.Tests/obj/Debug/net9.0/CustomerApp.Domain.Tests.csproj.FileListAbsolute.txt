@@ -1,0 +1,8 @@
+D:\UPT_CICLOS\CICLO VIII\Patrones\labs_Unidad2\lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos\CustomerApp\CustomerApp.Domain.Tests\bin\Debug\net9.0\.msCoverageSourceRootsMapping_CustomerApp.Domain.Tests
+D:\UPT_CICLOS\CICLO VIII\Patrones\labs_Unidad2\lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos\CustomerApp\CustomerApp.Domain.Tests\bin\Debug\net9.0\CoverletSourceRootsMapping_CustomerApp.Domain.Tests
+D:\UPT_CICLOS\CICLO VIII\Patrones\labs_Unidad2\lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos\CustomerApp\CustomerApp.Domain.Tests\obj\Debug\net9.0\CustomerApp.Domain.Tests.csproj.AssemblyReference.cache
+D:\UPT_CICLOS\CICLO VIII\Patrones\labs_Unidad2\lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos\CustomerApp\CustomerApp.Domain.Tests\obj\Debug\net9.0\CustomerApp.Domain.Tests.GeneratedMSBuildEditorConfig.editorconfig
+D:\UPT_CICLOS\CICLO VIII\Patrones\labs_Unidad2\lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos\CustomerApp\CustomerApp.Domain.Tests\obj\Debug\net9.0\CustomerApp.Domain.Tests.AssemblyInfoInputs.cache
+D:\UPT_CICLOS\CICLO VIII\Patrones\labs_Unidad2\lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos\CustomerApp\CustomerApp.Domain.Tests\obj\Debug\net9.0\CustomerApp.Domain.Tests.AssemblyInfo.cs
+D:\UPT_CICLOS\CICLO VIII\Patrones\labs_Unidad2\lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos\CustomerApp\CustomerApp.Domain.Tests\obj\Debug\net9.0\CustomerApp.Domain.Tests.csproj.CoreCompileInputs.cache
+D:\UPT_CICLOS\CICLO VIII\Patrones\labs_Unidad2\lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos\CustomerApp\CustomerApp.Domain.Tests\obj\Debug\net9.0\CustomerApp.Domain.Tests.sourcelink.json

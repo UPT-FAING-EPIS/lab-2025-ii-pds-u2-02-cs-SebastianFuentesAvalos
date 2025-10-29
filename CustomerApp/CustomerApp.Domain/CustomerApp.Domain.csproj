@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <!-- NuGet Package Properties -->
+    <PackageId>CustomerApp.Domain</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>Sebastian Nicolas Fuentes Avalos</Authors>
+    <Company>UPT-FAING-EPIS</Company>
+    <Product>CustomerApp Domain</Product>
+    <Description>Domain library for customer management system implementing SOLID principles. Includes customer validation, data access, and email services. Part of Design Patterns laboratory.</Description>
+    <PackageTags>design-patterns;solid-principles;customer-management;domain;validation</PackageTags>
+    <PackageProjectUrl>https://github.com/UPT-FAING-EPIS/lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/UPT-FAING-EPIS/lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+</Project>
