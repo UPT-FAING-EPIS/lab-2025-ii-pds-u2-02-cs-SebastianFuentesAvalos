@@ -69,8 +69,8 @@ jobs:
     - name: Create sonar-project.properties
       run: |
         cat > sonar-project.properties << 'EOF'
-        sonar.projectKey=UPT-FAING-EPIS_lab-2025-ii-pds-u2-02-cs-SebastianFuentesAvalos
-        sonar.organization=upt-faing-epis
+        sonar.projectKey=sebastianfuentesavalos_lab-2025-ii-pds-u2-02-cs-sebastianfuentesavalos
+        sonar.organization=sebastianfuentesavalos
         sonar.sources=Notifications/Notifications.Domain,CustomerApp/CustomerApp.Domain
         sonar.tests=Notifications/Notifications.Domain.Tests,CustomerApp/CustomerApp.Domain.Tests
         sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml

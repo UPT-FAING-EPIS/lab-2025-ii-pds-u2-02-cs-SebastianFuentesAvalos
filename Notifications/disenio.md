@@ -1,3 +1,5 @@
+!INCLUDE mermaid.md
+
 ```mermaid
 classDiagram
 
